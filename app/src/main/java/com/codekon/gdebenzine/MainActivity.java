@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         btnReload = findViewById(R.id.btnReload);
 
         setupWebView();
-
+        swipeRefreshLayout.setEnabled(false);
         swipeRefreshLayout.setOnRefreshListener(() -> {
             loadWebsite();
         });
