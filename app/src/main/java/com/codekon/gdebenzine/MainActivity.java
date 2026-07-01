@@ -41,7 +41,10 @@ public class MainActivity extends AppCompatActivity {
         btnReload = findViewById(R.id.btnReload);
 
         setupWebView();
+
+        // Отключаем pull-to-refresh, так как он конфликтует со скроллом внутри сайта (например, в боковом меню)
         swipeRefreshLayout.setEnabled(false);
+
         swipeRefreshLayout.setOnRefreshListener(() -> {
             loadWebsite();
         });
@@ -62,6 +65,12 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setGeolocationEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
+        webSettings.setUseWideViewPort(true);
+        webSettings.setLoadWithOverviewMode(true);
+
+        android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(webView, true);
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -71,6 +80,23 @@ public class MainActivity extends AppCompatActivity {
         });
 
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                String url = request.getUrl().toString();
+                // Стандартные ссылки обрабатываем внутри WebView
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false;
+                }
+                // VK, Telegram и другие внешние приложения пробрасываем в систему
+                try {
+                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url));
+                    startActivity(intent);
+                    return true;
+                } catch (Exception e) {
+                    return true;
+                }
+            }
+
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
